@@ -1,10 +1,9 @@
 use ndarray::prelude::*;
 use ndarray::{Array, Ix2, NdFloat};
-use num_traits::{Num, NumCast};
 
 pub struct Head<T>
 where
-    T: NdFloat + Num,
+    T: NdFloat,
 {
     w_Q: Array<T, Ix2>,
     w_K: Array<T, Ix2>,
@@ -15,7 +14,7 @@ where
 
 impl<T> Head<T>
 where
-    T: NdFloat + Num,
+    T: NdFloat,
 {
     pub fn new_zeros(embed_dim: usize, dim_key: usize, dim_val: usize) -> Head<T> {
         let w_Q = Array::<T, _>::zeros((embed_dim, dim_key));
@@ -36,11 +35,12 @@ where
         let K = input.dot(&self.w_K);
         let V = input.dot(&self.w_V);
 
-        let pre_attention_scores = Q.dot(&K.t());
+        let scores = Q.dot(&K.t()) / T::from(self.dim_key).unwrap().sqrt();
+        let exp_scores = scores.mapv(|a| a.exp());
 
-        let attention_scores = pre_attention_scores.mapv(|a| a.exp()) / T::from(self.dim_key).unwrap().sqrt();
+        let output = exp_scores.clone() / exp_scores.sum();
 
-        attention_scores
+        output
     }
 }
 
