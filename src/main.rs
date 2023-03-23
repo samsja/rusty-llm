@@ -40,7 +40,7 @@ where
 
         let output = exp_scores.clone() / exp_scores.sum();
 
-        output
+        output.dot(&V)
     }
 }
 
@@ -53,5 +53,7 @@ fn main() {
 
     let head = Head::<f32>::new_zeros(embed_dim, 64, 64);
 
-    head.attention(&embed);
+    let att = head.attention(&embed);
+
+    println!("{:?}", att);
 }
