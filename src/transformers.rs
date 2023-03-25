@@ -1,13 +1,11 @@
 use crate::utils::fill_tril;
-use ndarray::{Array, Ix2, NdFloat};
+use ndarray::{Array, Axis, Ix2, NdFloat, Slice};
 
 pub struct CausalHead<T>
 where
     T: NdFloat,
 {
-    w_q: Array<T, Ix2>, // TODO: optimization the three matrix should be contigious
-    w_k: Array<T, Ix2>,
-    w_v: Array<T, Ix2>,
+    qkv: Array<T, Ix2>, // Q, K, V at the same time
 }
 
 impl<T> CausalHead<T>
@@ -15,19 +13,20 @@ where
     T: NdFloat,
 {
     pub fn new_zeros(embed_dim: usize) -> CausalHead<T> {
-        let w_q = Array::<T, _>::zeros((embed_dim, embed_dim));
-        let w_k = Array::<T, _>::zeros((embed_dim, embed_dim));
-        let w_v = Array::<T, _>::zeros((embed_dim, embed_dim));
+        let qkv = Array::<T, _>::zeros((embed_dim, 3 * embed_dim));
 
-        CausalHead { w_q, w_k, w_v }
+        CausalHead { qkv }
     }
 
     pub fn attention(&self, input: &Array<T, Ix2>) -> Array<T, Ix2> {
-        let q = input.dot(&self.w_q);
-        let k = input.dot(&self.w_k);
-        let v = input.dot(&self.w_v);
+        let embed_dim = input.shape()[1];
+        let qkv = input.dot(&self.qkv); // (seq, 3* embed) = (seq, embed) @ (embed, 3* embed)
 
-        let mut scores = q.dot(&k.t()) / T::from(self.w_v.shape()[0]).unwrap().sqrt();
+        let q = qkv.slice_axis(Axis(1), Slice::from(..embed_dim));
+        let k = qkv.slice_axis(Axis(1), Slice::from(embed_dim..2 * embed_dim));
+        let v = qkv.slice_axis(Axis(1), Slice::from(2 * embed_dim..));
+
+        let mut scores = q.dot(&k.t()) / T::from(embed_dim).unwrap().sqrt();
         let mask_scores = fill_tril(&mut scores, T::from(-1e9).unwrap());
         mask_scores.mapv_inplace(|a| a.exp());
 
