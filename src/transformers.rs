@@ -6,6 +6,7 @@ where
     T: NdFloat,
 {
     qkv: Array<T, Ix2>, // Q, K, V at the same time
+    proj: Array<T, Ix2>,
 }
 
 impl<T> CausalHead<T>
@@ -14,8 +15,9 @@ where
 {
     pub fn new_zeros(embed_dim: usize) -> CausalHead<T> {
         let qkv = Array::<T, _>::zeros((embed_dim, 3 * embed_dim));
+        let proj = Array::<T, _>::zeros((embed_dim, embed_dim));
 
-        CausalHead { qkv }
+        CausalHead { qkv, proj }
     }
 
     pub fn attention(&self, input: &Array<T, Ix2>) -> Array<T, Ix2> {
@@ -26,13 +28,13 @@ where
         let k = qkv.slice_axis(Axis(1), Slice::from(embed_dim..2 * embed_dim));
         let v = qkv.slice_axis(Axis(1), Slice::from(2 * embed_dim..));
 
-        let mut scores = q.dot(&k.t()) / T::from(embed_dim).unwrap().sqrt();
+        let mut scores = q.dot(&k.t()) / T::from(embed_dim).unwrap().sqrt(); // (seq,seq) = (seq, embed) @ (embed, seq)
         let mask_scores = fill_tril(&mut scores, T::from(-1e9).unwrap());
         mask_scores.mapv_inplace(|a| a.exp());
 
         let output = mask_scores.clone() / mask_scores.sum();
 
-        output.dot(&v)
+        self.proj.dot(&output.dot(&v).t()) // (embed, seq) = (embed, embed) @ (embed, seq )
     }
 }
 
