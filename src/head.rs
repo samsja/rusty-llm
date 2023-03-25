@@ -1,4 +1,3 @@
-use ndarray::prelude::*;
 use ndarray::{Array, Ix2, NdFloat};
 
 pub struct Head<T>
@@ -9,7 +8,6 @@ where
     w_k: Array<T, Ix2>,
     w_v: Array<T, Ix2>,
     dim_key: usize,
-    dim_val: usize,
 }
 
 impl<T> Head<T>
@@ -26,7 +24,6 @@ where
             w_k,
             w_v,
             dim_key,
-            dim_val,
         }
     }
 
@@ -41,5 +38,24 @@ where
         let output = exp_scores.clone() / exp_scores.sum();
 
         output.dot(&v)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use ndarray::prelude::*;
+
+    #[test]
+    fn test_attention() {
+        let embed_dim = 100;
+        let seq_len = 10;
+
+        let embed = Array::<f32, _>::zeros((seq_len, embed_dim).f());
+        println!("{:?}", embed);
+
+        let head = Head::<f32>::new_zeros(embed_dim, 64, 64);
+
+        head.attention(&embed);
     }
 }

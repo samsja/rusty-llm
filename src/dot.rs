@@ -1,6 +1,6 @@
 use ndarray::{Array, Ix2, Ix3, NdFloat};
 
-fn dot_3d<'a, T: NdFloat>(mat1: &'a mut Array<T, Ix3>, mat2: &'a Array<T, Ix2>) -> Array<T, Ix3> {
+pub fn dot_3d<'a, T: NdFloat>(mat1: &'a mut Array<T, Ix3>, mat2: &'a Array<T, Ix2>) -> Array<T, Ix3> {
     let shape = mat1.shape();
 
     let mat1_2d = mat1.to_shape((shape[0] * shape[1], shape[2])).unwrap();
