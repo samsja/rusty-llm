@@ -20,6 +20,7 @@ pub fn tril<'a, T: NdFloat>(x: &'a mut Array<T, Ix2>) -> &'a Array<T, Ix2> {
     fill_tril(x, T::from(0.0).unwrap())
 }
 
+#[cfg(test)]
 mod tests {
     use super::*;
     use ndarray::prelude::*;
