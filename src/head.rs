@@ -5,7 +5,7 @@ pub struct Head<T>
 where
     T: NdFloat,
 {
-    w_q: Array<T, Ix2>,
+    w_q: Array<T, Ix2>, // TODO: optimization the three matrix should be contigious
     w_k: Array<T, Ix2>,
     w_v: Array<T, Ix2>,
     dim_key: usize,
