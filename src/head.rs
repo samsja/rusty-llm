@@ -34,7 +34,7 @@ where
         let v = input.dot(&self.w_v);
 
         let mut scores = q.dot(&k.t()) / T::from(self.dim_key).unwrap().sqrt();
-        let mut mask_scores = fill_tril(&mut scores, T::from(-1e9).unwrap());
+        let mask_scores = fill_tril(&mut scores, T::from(-1e9).unwrap());
         mask_scores.mapv_inplace(|a| a.exp());
 
         let output =  mask_scores.clone() / mask_scores.sum();
