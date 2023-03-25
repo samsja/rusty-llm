@@ -1,3 +1,4 @@
+use crate::utils::fill_tril;
 use ndarray::{Array, Ix2, NdFloat};
 
 pub struct Head<T>
@@ -32,8 +33,9 @@ where
         let k = input.dot(&self.w_k);
         let v = input.dot(&self.w_v);
 
-        let scores = q.dot(&k.t()) / T::from(self.dim_key).unwrap().sqrt();
-        let exp_scores = scores.mapv(|a| a.exp());
+        let mut scores = q.dot(&k.t()) / T::from(self.dim_key).unwrap().sqrt();
+        let mut mask_scores = fill_tril(&mut scores, T::from(-1e-9).unwrap());
+        let exp_scores = mask_scores.mapv(|a| a.exp());
 
         let output = exp_scores.clone() / exp_scores.sum();
 

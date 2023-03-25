@@ -1,16 +1,23 @@
 use ndarray::{Array, Ix2, NdFloat};
 
-pub fn tril<'a, T: NdFloat>(x: &'a mut Array<T, Ix2>) -> &'a Array<T, Ix2> {
+
+
+pub fn fill_tril<'a, T: NdFloat>(x: &'a mut Array<T, Ix2>, val: T) -> &'a Array<T, Ix2> {
     // similar to numpy or torch tril
     for i in 0..x.shape()[0] {
         for j in 0..x.shape()[1] {
             if j > i {
-                x[[i, j]] = T::from(0.0).unwrap();
+                x[[i, j]] = val;
             }
         }
     }
 
     x
+}
+
+pub fn tril<'a, T: NdFloat>(x: &'a mut Array<T, Ix2>) -> &'a Array<T, Ix2> {
+
+    fill_tril(x, T::from(0.0).unwrap())
 }
 
 mod tests {
