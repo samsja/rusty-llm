@@ -8,7 +8,6 @@ where
     w_q: Array<T, Ix2>, // TODO: optimization the three matrix should be contigious
     w_k: Array<T, Ix2>,
     w_v: Array<T, Ix2>,
-    embed_dim: usize,
 }
 
 impl<T> CausalHead<T>
@@ -24,7 +23,6 @@ where
             w_q,
             w_k,
             w_v,
-            embed_dim,
         }
     }
 
@@ -33,7 +31,7 @@ where
         let k = input.dot(&self.w_k);
         let v = input.dot(&self.w_v);
 
-        let mut scores = q.dot(&k.t()) / T::from(self.embed_dim).unwrap().sqrt();
+        let mut scores = q.dot(&k.t()) / T::from(self.w_v.shape()[0]).unwrap().sqrt();
         let mask_scores = fill_tril(&mut scores, T::from(-1e9).unwrap());
         mask_scores.mapv_inplace(|a| a.exp());
 
