@@ -8,23 +8,23 @@ where
     w_q: Array<T, Ix2>, // TODO: optimization the three matrix should be contigious
     w_k: Array<T, Ix2>,
     w_v: Array<T, Ix2>,
-    dim_key: usize,
+    embed_dim: usize,
 }
 
 impl<T> Head<T>
 where
     T: NdFloat,
 {
-    pub fn new_zeros(embed_dim: usize, dim_key: usize, dim_val: usize) -> Head<T> {
-        let w_q = Array::<T, _>::zeros((embed_dim, dim_key));
-        let w_k = Array::<T, _>::zeros((embed_dim, dim_key));
-        let w_v = Array::<T, _>::zeros((embed_dim, dim_val));
+    pub fn new_zeros(embed_dim: usize) -> Head<T> {
+        let w_q = Array::<T, _>::zeros((embed_dim, embed_dim));
+        let w_k = Array::<T, _>::zeros((embed_dim, embed_dim));
+        let w_v = Array::<T, _>::zeros((embed_dim, embed_dim));
 
         Head {
             w_q,
             w_k,
             w_v,
-            dim_key,
+            embed_dim,
         }
     }
 
@@ -33,7 +33,7 @@ where
         let k = input.dot(&self.w_k);
         let v = input.dot(&self.w_v);
 
-        let mut scores = q.dot(&k.t()) / T::from(self.dim_key).unwrap().sqrt();
+        let mut scores = q.dot(&k.t()) / T::from(self.embed_dim).unwrap().sqrt();
         let mask_scores = fill_tril(&mut scores, T::from(-1e9).unwrap());
         mask_scores.mapv_inplace(|a| a.exp());
 
@@ -55,7 +55,7 @@ mod tests {
 
         let embed = Array::<f32, _>::zeros((seq_len, embed_dim).f());
 
-        let head = Head::<f32>::new_zeros(embed_dim, 64, 64);
+        let head = Head::<f32>::new_zeros(embed_dim);
 
         head.attention(&embed);
     }
