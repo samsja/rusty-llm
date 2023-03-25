@@ -19,11 +19,7 @@ where
         let w_k = Array::<T, _>::zeros((embed_dim, embed_dim));
         let w_v = Array::<T, _>::zeros((embed_dim, embed_dim));
 
-        CausalHead {
-            w_q,
-            w_k,
-            w_v,
-        }
+        CausalHead { w_q, w_k, w_v }
     }
 
     pub fn attention(&self, input: &Array<T, Ix2>) -> Array<T, Ix2> {
