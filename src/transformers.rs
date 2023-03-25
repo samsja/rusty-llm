@@ -1,7 +1,7 @@
 use crate::utils::fill_tril;
 use ndarray::{Array, Ix2, NdFloat};
 
-pub struct Head<T>
+pub struct CausalHead<T>
 where
     T: NdFloat,
 {
@@ -11,16 +11,16 @@ where
     embed_dim: usize,
 }
 
-impl<T> Head<T>
+impl<T> CausalHead<T>
 where
     T: NdFloat,
 {
-    pub fn new_zeros(embed_dim: usize) -> Head<T> {
+    pub fn new_zeros(embed_dim: usize) -> CausalHead<T> {
         let w_q = Array::<T, _>::zeros((embed_dim, embed_dim));
         let w_k = Array::<T, _>::zeros((embed_dim, embed_dim));
         let w_v = Array::<T, _>::zeros((embed_dim, embed_dim));
 
-        Head {
+        CausalHead {
             w_q,
             w_k,
             w_v,
@@ -55,7 +55,7 @@ mod tests {
 
         let embed = Array::<f32, _>::zeros((seq_len, embed_dim).f());
 
-        let head = Head::<f32>::new_zeros(embed_dim);
+        let head = CausalHead::<f32>::new_zeros(embed_dim);
 
         head.attention(&embed);
     }
