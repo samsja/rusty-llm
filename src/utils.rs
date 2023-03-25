@@ -1,7 +1,5 @@
 use ndarray::{Array, Ix2, NdFloat};
 
-
-
 pub fn fill_tril<'a, T: NdFloat>(x: &'a mut Array<T, Ix2>, val: T) -> &'a mut Array<T, Ix2> {
     // similar to numpy or torch tril
     for i in 0..x.shape()[0] {
@@ -16,7 +14,6 @@ pub fn fill_tril<'a, T: NdFloat>(x: &'a mut Array<T, Ix2>, val: T) -> &'a mut Ar
 }
 
 pub fn tril<'a, T: NdFloat>(x: &'a mut Array<T, Ix2>) -> &'a Array<T, Ix2> {
-
     fill_tril(x, T::from(0.0).unwrap())
 }
 

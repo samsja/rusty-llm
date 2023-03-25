@@ -37,7 +37,7 @@ where
         let mask_scores = fill_tril(&mut scores, T::from(-1e9).unwrap());
         mask_scores.mapv_inplace(|a| a.exp());
 
-        let output =  mask_scores.clone() / mask_scores.sum();
+        let output = mask_scores.clone() / mask_scores.sum();
 
         output.dot(&v)
     }
