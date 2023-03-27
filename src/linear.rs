@@ -29,6 +29,13 @@ where
 
         Linear { weight, bias }
     }
+
+    pub fn new_zeros(dim: usize) -> Linear<T> {
+        let weight = Array::<T, _>::zeros((dim, dim));
+        let bias = Array::<T, _>::zeros(dim);
+
+        Linear::<T>::new(weight, bias)
+    }
 }
 
 #[cfg(test)]
