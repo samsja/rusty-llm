@@ -1,6 +1,7 @@
-use ndarray::{Array, Ix2, NdFloat};
+use crate::float::MyFloat;
+use ndarray::{Array, Ix2};
 
-pub fn fill_tril<'a, T: NdFloat>(x: &'a mut Array<T, Ix2>, val: T) -> &'a mut Array<T, Ix2> {
+pub fn fill_tril<'a, T: MyFloat>(x: &'a mut Array<T, Ix2>, val: T) -> &'a mut Array<T, Ix2> {
     // similar to numpy or torch tril
     for i in 0..x.shape()[0] {
         for j in 0..x.shape()[1] {
@@ -13,7 +14,7 @@ pub fn fill_tril<'a, T: NdFloat>(x: &'a mut Array<T, Ix2>, val: T) -> &'a mut Ar
     x
 }
 
-pub fn tril<'a, T: NdFloat>(x: &'a mut Array<T, Ix2>) -> &'a Array<T, Ix2> {
+pub fn tril<'a, T: MyFloat>(x: &'a mut Array<T, Ix2>) -> &'a Array<T, Ix2> {
     fill_tril(x, T::from(0.0).unwrap())
 }
 

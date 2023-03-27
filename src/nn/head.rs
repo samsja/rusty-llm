@@ -1,10 +1,11 @@
+use crate::float::MyFloat;
 use crate::nn::linear::Linear;
 use crate::nn::utils::fill_tril;
-use ndarray::{Array, Axis, Ix2, NdFloat, Slice};
+use ndarray::{Array, Axis, Ix2, Slice};
 
 pub struct CausalHead<T>
 where
-    T: NdFloat,
+    T: MyFloat,
 {
     qkv: Linear<T>, // Q, K, V at the same time
     proj: Linear<T>,
@@ -12,7 +13,7 @@ where
 
 impl<T> CausalHead<T>
 where
-    T: NdFloat,
+    T: MyFloat,
 {
     pub fn new_zeros(embed_dim: usize) -> CausalHead<T> {
         let qkv = Linear::<T>::new_zeros(embed_dim, 3 * embed_dim);

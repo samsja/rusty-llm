@@ -1,10 +1,10 @@
-// decoder only LLM
+use crate::float::MyFloat;
 use crate::nn::head::CausalHead;
 use crate::nn::linear::Linear;
-use ndarray::{Array, Ix2, NdFloat};
+use ndarray::{Array, Ix2};
 use std::f32::consts::PI;
 
-pub fn new_gelu_inplace<'a, T: NdFloat>(x: &'a mut Array<T, Ix2>) {
+pub fn new_gelu_inplace<'a, T: MyFloat>(x: &'a mut Array<T, Ix2>) {
     x.mapv_inplace(|v| {
         T::from(0.5).unwrap()
             * v
@@ -17,7 +17,7 @@ pub fn new_gelu_inplace<'a, T: NdFloat>(x: &'a mut Array<T, Ix2>) {
 
 pub struct Block<T>
 where
-    T: NdFloat,
+    T: MyFloat,
 {
     head: CausalHead<T>,
     fc: Linear<T>,
@@ -26,7 +26,7 @@ where
 
 impl<T> Block<T>
 where
-    T: NdFloat,
+    T: MyFloat,
 {
     pub fn forward(&self, input: &Array<T, Ix2>) -> Array<T, Ix2> {
         let output = self.head.attention(input);
