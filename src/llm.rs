@@ -1,5 +1,6 @@
 // decoder only LLM
 use crate::head::CausalHead;
+use crate::linear::Linear;
 use ndarray::{Array, Ix2, NdFloat};
 use std::f32::consts::PI;
 
@@ -19,8 +20,8 @@ where
     T: NdFloat,
 {
     head: CausalHead<T>,
-    fc: Array<T, Ix2>,
-    proj: Array<T, Ix2>,
+    fc: Linear<T>,
+    proj: Linear<T>,
 }
 
 impl<T> Block<T>
@@ -29,11 +30,19 @@ where
 {
     pub fn forward(&self, input: &Array<T, Ix2>) -> Array<T, Ix2> {
         let output = self.head.attention(input);
-        let output = output.t().dot(&self.fc);
-        let mut output = output.dot(&self.proj);
+        let output = self.fc.forward(&output);
+        let mut output = self.proj.forward(&output);
         new_gelu_inplace(&mut output);
 
         output
+    }
+
+    pub fn new_zeros(embed_dim: usize) -> Block<T> {
+        let head = CausalHead::<T>::new_zeros(embed_dim);
+        let fc = Linear::<T>::new_zeros(embed_dim, 4 * embed_dim);
+        let proj = Linear::<T>::new_zeros(4 * embed_dim, embed_dim);
+
+        Block { head, fc, proj }
     }
 }
 
@@ -49,11 +58,7 @@ mod tests {
 
         let embed = Array::<f32, _>::zeros((seq_len, embed_dim).f());
 
-        let head = CausalHead::<f32>::new_zeros(embed_dim);
-        let fc = Array::<f32, _>::zeros((embed_dim, 4 * embed_dim));
-        let proj = Array::<f32, _>::zeros((4 * embed_dim, embed_dim));
-
-        let block = Block { head, fc, proj };
+        let block = Block::<f32>::new_zeros(100);
 
         block.forward(&embed);
     }
