@@ -30,9 +30,9 @@ where
         Linear { weight, bias }
     }
 
-    pub fn new_zeros(dim: usize) -> Linear<T> {
-        let weight = Array::<T, _>::zeros((dim, dim));
-        let bias = Array::<T, _>::zeros(dim);
+    pub fn new_zeros(dim_in: usize, dim_out: usize) -> Linear<T> {
+        let weight = Array::<T, _>::zeros((dim_out, dim_in));
+        let bias = Array::<T, _>::zeros(dim_out);
 
         Linear::<T>::new(weight, bias)
     }
@@ -41,18 +41,14 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
-    use ndarray::prelude::*;
-
+    
     #[test]
     fn test_forward() {
         let input_dim = 3;
         let output_dim = 4;
         let seq = 2;
 
-        let weight = Array::<f32, _>::zeros((output_dim, input_dim));
-        let bias = Array::<f32, _>::zeros(output_dim);
-
-        let linear = Linear::new(weight, bias);
+        let linear = Linear::<f32>::new_zeros(input_dim, output_dim);
 
         let input = Array::<f32, _>::zeros((seq, input_dim));
 
