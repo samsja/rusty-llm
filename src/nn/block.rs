@@ -1,6 +1,6 @@
 // decoder only LLM
-use crate::head::CausalHead;
-use crate::linear::Linear;
+use crate::nn::head::CausalHead;
+use crate::nn::linear::Linear;
 use ndarray::{Array, Ix2, NdFloat};
 use std::f32::consts::PI;
 

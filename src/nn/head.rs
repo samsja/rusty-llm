@@ -1,5 +1,5 @@
-use crate::linear::Linear;
-use crate::utils::fill_tril;
+use crate::nn::linear::Linear;
+use crate::nn::utils::fill_tril;
 use ndarray::{Array, Axis, Ix2, NdFloat, Slice};
 
 pub struct CausalHead<T>
