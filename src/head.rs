@@ -24,7 +24,7 @@ where
 
     pub fn attention(&self, input: &Array<T, Ix2>) -> Array<T, Ix2> {
         let embed_dim = input.shape()[1];
-        
+
         let qkv = self.qkv.forward(&input); // (seq, 3* embed) = (seq, embed) @ (embed, 3* embed)
 
         let q = qkv.slice_axis(Axis(1), Slice::from(..embed_dim));
