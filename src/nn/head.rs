@@ -20,6 +20,9 @@ where
 
         let proj = Linear::<T>::new_zeros(embed_dim, embed_dim);
 
+        CausalHead::new(qkv, proj)
+    }
+    pub fn new(qkv: Linear<T>, proj: Linear<T>) -> CausalHead<T> {
         CausalHead { qkv, proj }
     }
 
