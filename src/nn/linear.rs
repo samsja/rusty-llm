@@ -1,8 +1,9 @@
-use ndarray::{Array, Ix1, Ix2, NdFloat};
+use crate::float::MyFloat;
+use ndarray::{Array, Ix1, Ix2};
 
 pub struct Linear<T>
 where
-    T: NdFloat,
+    T: MyFloat,
 {
     weight: Array<T, Ix2>,
     bias: Array<T, Ix1>,
@@ -10,11 +11,10 @@ where
 
 impl<T> Linear<T>
 where
-    T: NdFloat,
+    T: MyFloat,
 {
     pub fn forward(&self, input: &Array<T, Ix2>) -> Array<T, Ix2> {
         let output = input.dot(&self.weight.t());
-        print!("dot {:?} \n", output);
         output + self.bias.clone() // could be optimize to do inplace
     }
 
@@ -41,6 +41,7 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
+    use half::f16;
 
     #[test]
     fn test_forward() {
@@ -51,6 +52,19 @@ mod tests {
         let linear = Linear::<f32>::new_zeros(input_dim, output_dim);
 
         let input = Array::<f32, _>::zeros((seq, input_dim));
+
+        linear.forward(&input);
+    }
+
+    #[test]
+    fn test_f16() {
+        let input_dim = 3;
+        let output_dim = 4;
+        let seq = 2;
+
+        let linear = Linear::<f16>::new_zeros(input_dim, output_dim);
+
+        let input = Array::<f16, _>::zeros((seq, input_dim));
 
         linear.forward(&input);
     }
