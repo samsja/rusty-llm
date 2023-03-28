@@ -7,5 +7,5 @@ edition = "2021"
 
 [dependencies]
 half = { version = "2.2.1", features = ["num-traits"] }
-ndarray = "0.15.6"
+ndarray = { version = "0.15.6", git = "https://github.com/samsja/ndarray" }
 num-traits = "0.2.15"
