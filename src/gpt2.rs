@@ -10,7 +10,7 @@ where
     w_token_embed: Array<T, Ix2>,
     w_pos_embed: Array<T, Ix2>,
     blocks: Vec<Block<T>>,
-    next_word_layer: Linear<T>,
+    next_word_layer: Linear<T>, // TODO: should be without bias
 }
 
 impl<T> GPT<T>
