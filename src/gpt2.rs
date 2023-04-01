@@ -31,7 +31,7 @@ where
         }
     }
 
-    pub fn forward(&self, indices: &[usize]) -> Array<T, Ix2> {
+    pub fn forward(&self, indices: &Vec<usize>) -> Array<T, Ix2> {
         let token_embeddng = self.w_token_embed.select(Axis(0), indices);
         let range: Vec<usize> = (0..indices.len()).map(|i| i).collect();
         let pos_embedding = self.w_pos_embed.select(Axis(0), &range);
@@ -51,13 +51,15 @@ mod tests {
     use super::*;
     use ndarray::prelude::*;
 
+    use tokenizers::Tokenizer;
+
     #[test]
     fn test_gpt() {
         let embed_dim = 16;
         //  let seq_len = 10;
-        let vocab_size = 32;
+        let vocab_size = 50257;
         // let num_head = 4;
-        let block_size = 8;
+        let block_size = 1024;
         let n_blocks = 3;
 
         let w_token_embed = Array::<f32, _>::zeros((vocab_size, embed_dim).f());
@@ -71,6 +73,12 @@ mod tests {
 
         let gpt = GPT::<f32>::new(w_token_embed, w_pos_embed, blocks, next_word_layer);
 
-        gpt.forward(&[1, 3, 4]);
+        let tokenizer = Tokenizer::from_file("tokenizer/tokenizer.json").unwrap();
+
+        let encode = tokenizer.encode("hello", false).unwrap();
+
+        let ids: Vec<usize> = encode.get_ids().iter().map(|&x| x as usize).collect();
+
+        gpt.forward(&ids);
     }
 }

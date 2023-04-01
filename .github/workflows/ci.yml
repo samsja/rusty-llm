@@ -20,6 +20,8 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - run: rustup update ${{ matrix.toolchain }} && rustup default ${{ matrix.toolchain }}
+      - run: mkdir tokenizer
+      - run: curl https://huggingface.co/gpt2/resolve/main/tokenizer.json > tokenizer/tokenizer.json # download tokenizer
       - run: cargo build --verbose
       - run: cargo test --verbose
 
