@@ -41,8 +41,11 @@ where
         let head = CausalHead::<T>::new_zeros(embed_dim);
         let fc = Linear::<T>::new_zeros(embed_dim, 4 * embed_dim);
         let proj = Linear::<T>::new_zeros(4 * embed_dim, embed_dim);
+        Block::new(head, fc, proj)
+    }
 
-        Block { head, fc, proj }
+    pub fn new(head: CausalHead<T>, fc: Linear<T>, proj: Linear<T>) -> Block<T> {
+        Block::<T> { head, fc, proj }
     }
 }
 
