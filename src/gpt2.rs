@@ -1,6 +1,6 @@
 use crate::float::MyFloat;
 use crate::nn::block::Block;
-use crate::nn::linear::Linear;
+use crate::nn::linear::LinearNoBias;
 use ndarray::{Array, Axis, Ix2};
 
 pub struct GPT<T>
@@ -10,7 +10,7 @@ where
     w_token_embed: Array<T, Ix2>,
     w_pos_embed: Array<T, Ix2>,
     blocks: Vec<Block<T>>,
-    next_word_layer: Linear<T>, // TODO: should be without bias
+    next_word_layer: LinearNoBias<T>, // TODO: should be without bias
 }
 
 impl<T> GPT<T>
@@ -21,7 +21,7 @@ where
         w_token_embed: Array<T, Ix2>,
         w_pos_embed: Array<T, Ix2>,
         blocks: Vec<Block<T>>,
-        next_word_layer: Linear<T>,
+        next_word_layer: LinearNoBias<T>,
     ) -> GPT<T> {
         GPT::<T> {
             w_token_embed,
@@ -69,7 +69,7 @@ mod tests {
             .map(|_| Block::<f32>::new_zeros(embed_dim))
             .collect::<Vec<Block<f32>>>();
 
-        let next_word_layer = Linear::<f32>::new_zeros(embed_dim, vocab_size);
+        let next_word_layer = LinearNoBias::<f32>::new_zeros(embed_dim, vocab_size);
 
         let gpt = GPT::<f32>::new(w_token_embed, w_pos_embed, blocks, next_word_layer);
 
