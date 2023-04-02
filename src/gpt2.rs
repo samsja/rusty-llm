@@ -82,28 +82,11 @@ mod tests {
         gpt.forward(&ids);
     }
 
-    use safetensors::tensor::TensorView;
+    use crate::convert::from_safe_tensorview;
     use safetensors::SafeTensors;
 
     use std::fs::File;
     use std::io::prelude::*;
-
-    pub fn to_f32<'data>(view: TensorView<'data>) -> Vec<f32> {
-        // inspire from smelte-rs.
-        // https://github.com/Narsil/smelte-rs/blob/d81f714abce2e64539d3c87dfc6c5488e6a65c03/examples/bert.rs#L168
-        // TODO understand what the fuck is going on here. I want to move on towards the end of
-        // the project and then deal with this part
-
-        let v = view.data();
-
-        let mut c = Vec::with_capacity(v.len() / 4);
-        let mut i = 0;
-        while i < v.len() {
-            c.push(f32::from_le_bytes([v[i], v[i + 1], v[i + 2], v[i + 3]]));
-            i += 4;
-        }
-        c
-    }
 
     #[test]
     fn test_weight_loading() {
@@ -113,9 +96,7 @@ mod tests {
         // read the whole file
         f.read_to_end(&mut buffer).unwrap();
         let tensors: SafeTensors = SafeTensors::deserialize(&buffer).unwrap();
-        let t = Array::<f32, _>::from(to_f32(tensors.tensor(&format!("h.0.attn.bias")).unwrap()));
-        let t = Array::<f32, _>::from(to_f32(
-            tensors.tensor(&format!("h.0.attn.c_attn.weight")).unwrap(),
-        ));
+        let t = from_safe_tensorview(tensors.tensor(&format!("h.0.attn.bias")).unwrap());
+        let t = from_safe_tensorview(tensors.tensor(&format!("h.0.attn.c_attn.weight")).unwrap());
     }
 }
