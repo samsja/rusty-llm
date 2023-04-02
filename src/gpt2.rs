@@ -1,7 +1,9 @@
+use crate::convert::from_safe_tensorview;
 use crate::float::MyFloat;
 use crate::nn::block::Block;
 use crate::nn::linear::LinearNoBias;
 use ndarray::{Array, Axis, Ix2};
+use safetensors::SafeTensors;
 
 pub struct GPT<T>
 where
@@ -44,6 +46,23 @@ where
 
         self.next_word_layer.forward(&output)
     }
+
+    pub fn load_from_safe_tensors(tensors: &SafeTensors, config: Config) {
+        let w_token_embed =
+            from_safe_tensorview::<T>(tensors.tensor(&format!("wte.weight")).unwrap())
+                .into_shape((config.vocab_size, config.embed_dim));
+
+        let w_pos_embed =
+            from_safe_tensorview::<T>(tensors.tensor(&format!("h.0.attn.c_attn.weight")).unwrap())
+                .into_shape((config.block_size, config.embed_dim));
+    }
+}
+
+pub struct Config {
+    pub embed_dim: usize,
+    pub vocab_size: usize,
+    pub block_size: usize,
+    pub n_blocks: usize,
 }
 
 #[cfg(test)]
@@ -81,22 +100,30 @@ mod tests {
 
         gpt.forward(&ids);
     }
-
-    use crate::convert::from_safe_tensorview;
-    use safetensors::SafeTensors;
-
     use std::fs::File;
     use std::io::prelude::*;
 
     #[test]
     fn test_weight_loading() {
+        let embed_dim = 16;
+        let vocab_size = 50257;
+        let block_size = 1024;
+        let n_blocks = 3;
+
+        let config = Config {
+            embed_dim,
+            vocab_size,
+            block_size,
+            n_blocks,
+        };
+
         let mut f = File::open("models/model.safetensors").unwrap();
         let mut buffer = Vec::new();
 
         // read the whole file
         f.read_to_end(&mut buffer).unwrap();
         let tensors: SafeTensors = SafeTensors::deserialize(&buffer).unwrap();
-        from_safe_tensorview::<f32>(tensors.tensor(&format!("h.0.attn.bias")).unwrap());
-        from_safe_tensorview::<f32>(tensors.tensor(&format!("h.0.attn.c_attn.weight")).unwrap());
+
+        GPT::<f32>::load_from_safe_tensors(&tensors, config);
     }
 }
