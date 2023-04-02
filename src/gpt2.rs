@@ -47,20 +47,13 @@ where
         self.next_word_layer.forward(&output)
     }
 
-    pub fn load_from_safe_tensors(tensors: &SafeTensors, config: Config) {
+    pub fn load_from_safe_tensors(tensors: &SafeTensors) {
         let w_token_embed =
             from_safe_tensorview::<T>(tensors.tensor(&format!("wte.weight")).unwrap());
 
         let w_pos_embed =
             from_safe_tensorview::<T>(tensors.tensor(&format!("h.0.attn.c_attn.weight")).unwrap());
     }
-}
-
-pub struct Config {
-    pub embed_dim: usize,
-    pub vocab_size: usize,
-    pub block_size: usize,
-    pub n_blocks: usize,
 }
 
 #[cfg(test)]
@@ -103,18 +96,6 @@ mod tests {
 
     #[test]
     fn test_weight_loading() {
-        let embed_dim = 16;
-        let vocab_size = 50257;
-        let block_size = 1024;
-        let n_blocks = 3;
-
-        let config = Config {
-            embed_dim,
-            vocab_size,
-            block_size,
-            n_blocks,
-        };
-
         let mut f = File::open("models/model.safetensors").unwrap();
         let mut buffer = Vec::new();
 
@@ -122,6 +103,6 @@ mod tests {
         f.read_to_end(&mut buffer).unwrap();
         let tensors: SafeTensors = SafeTensors::deserialize(&buffer).unwrap();
 
-        GPT::<f32>::load_from_safe_tensors(&tensors, config);
+        GPT::<f32>::load_from_safe_tensors(&tensors);
     }
 }
