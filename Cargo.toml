@@ -9,4 +9,5 @@ edition = "2021"
 half = { version = "2.2.1", features = ["num-traits"] }
 ndarray = { version = "0.15.6", git = "https://github.com/samsja/ndarray" }
 num-traits = "0.2.15"
+safetensors = "0.3.0"
 tokenizers = { version = "0.13.2", features = ["http"] }

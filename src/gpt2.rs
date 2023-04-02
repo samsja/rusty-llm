@@ -81,4 +81,19 @@ mod tests {
 
         gpt.forward(&ids);
     }
+
+    use safetensors::SafeTensors;
+    use std::fs::File;
+    use std::io::prelude::*;
+
+    #[test]
+    fn test_weight_loading() {
+        let mut f = File::open("models/model.safetensors").unwrap();
+        let mut buffer = Vec::new();
+
+        // read the whole file
+        f.read_to_end(&mut buffer).unwrap();
+        let tensors: SafeTensors = SafeTensors::deserialize(&buffer).unwrap();
+        let t = tensors.tensor(&format!("h.0.attn.bias")).unwrap().data();
+    }
 }
