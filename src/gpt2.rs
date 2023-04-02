@@ -49,12 +49,10 @@ where
 
     pub fn load_from_safe_tensors(tensors: &SafeTensors, config: Config) {
         let w_token_embed =
-            from_safe_tensorview::<T>(tensors.tensor(&format!("wte.weight")).unwrap())
-                .into_shape((config.vocab_size, config.embed_dim));
+            from_safe_tensorview::<T>(tensors.tensor(&format!("wte.weight")).unwrap());
 
         let w_pos_embed =
-            from_safe_tensorview::<T>(tensors.tensor(&format!("h.0.attn.c_attn.weight")).unwrap())
-                .into_shape((config.block_size, config.embed_dim));
+            from_safe_tensorview::<T>(tensors.tensor(&format!("h.0.attn.c_attn.weight")).unwrap());
     }
 }
 

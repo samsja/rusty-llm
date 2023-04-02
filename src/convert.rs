@@ -1,8 +1,8 @@
 use crate::float::MyFloat;
-use ndarray::{Array, Ix1};
+use ndarray::{Array, Ix1, Ix2};
 use safetensors::tensor::TensorView;
 
-pub fn to_float<'data, T: MyFloat>(view: TensorView<'data>) -> Vec<T> {
+pub fn to_float<'data, T: MyFloat>(view: &TensorView<'data>) -> Vec<T> {
     // inspire from smelte-rs.
     // https://github.com/Narsil/smelte-rs/blob/d81f714abce2e64539d3c87dfc6c5488e6a65c03/examples/bert.rs#L168
     // TODO understand what the fuck is going on here. I want to move on towards the end of
@@ -19,6 +19,15 @@ pub fn to_float<'data, T: MyFloat>(view: TensorView<'data>) -> Vec<T> {
     c
 }
 
-pub fn from_safe_tensorview<T: MyFloat>(tensor: TensorView) -> Array<T, Ix1> {
-    Array::<T, Ix1>::from(to_float(tensor))
+pub fn from_safe_tensorview_1d<T: MyFloat>(tensor: TensorView) -> Array<T, Ix1> {
+    Array::<T, Ix1>::from(to_float::<T>(&tensor))
+}
+
+pub fn from_safe_tensorview<T: MyFloat>(tensor: TensorView) -> Array<T, Ix2> {
+    let shape = tensor.shape();
+    Array::<T, Ix1>::from(to_float::<T>(&tensor))
+        .into_shape(shape)
+        .unwrap()
+        .into_dimensionality::<Ix2>()
+        .unwrap()
 }
