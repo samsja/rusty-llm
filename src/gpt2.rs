@@ -96,7 +96,7 @@ mod tests {
         // read the whole file
         f.read_to_end(&mut buffer).unwrap();
         let tensors: SafeTensors = SafeTensors::deserialize(&buffer).unwrap();
-        let t = from_safe_tensorview(tensors.tensor(&format!("h.0.attn.bias")).unwrap());
-        let t = from_safe_tensorview(tensors.tensor(&format!("h.0.attn.c_attn.weight")).unwrap());
+        from_safe_tensorview::<f32>(tensors.tensor(&format!("h.0.attn.bias")).unwrap());
+        from_safe_tensorview::<f32>(tensors.tensor(&format!("h.0.attn.c_attn.weight")).unwrap());
     }
 }
