@@ -87,11 +87,9 @@ where
     }
 
     pub fn load_from_safe_tensors(tensors: &SafeTensors) {
-        let w_token_embed =
-            from_safe_tensorview::<T>(tensors.tensor(&format!("wte.weight")).unwrap());
+        let w_token_embed = from_safe_tensorview::<T>(tensors.tensor("wte.weight").unwrap());
 
-        let w_pos_embed =
-            from_safe_tensorview::<T>(tensors.tensor(&format!("wpe.weight")).unwrap());
+        let w_pos_embed = from_safe_tensorview::<T>(tensors.tensor("wpe.weight").unwrap());
 
         let block_1 = GPT::<T>::load_block(tensors, 0);
     }
