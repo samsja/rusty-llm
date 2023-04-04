@@ -86,12 +86,20 @@ where
         Block::<T>::new(head, fc, proj)
     }
 
-    pub fn load_from_safe_tensors(tensors: &SafeTensors) {
+    pub fn load_from_safe_tensors(tensors: &SafeTensors) -> GPT<T> {
         let w_token_embed = from_safe_tensorview::<T>(tensors.tensor("wte.weight").unwrap());
 
         let w_pos_embed = from_safe_tensorview::<T>(tensors.tensor("wpe.weight").unwrap());
 
-        let block_1 = GPT::<T>::load_block(tensors, 0);
+        // use 11
+        let blocks = (0..2)
+            .map(|i| GPT::<T>::load_block(tensors, i))
+            .collect::<Vec<Block<T>>>();
+
+        let next_word_weight = from_safe_tensorview::<T>(tensors.tensor("wte.weight").unwrap());
+        let next_word_layer = LinearNoBias::<T>::new(next_word_weight);
+
+        GPT::<T>::new(w_token_embed, w_pos_embed, blocks, next_word_layer)
     }
 }
 
@@ -142,6 +150,14 @@ mod tests {
         f.read_to_end(&mut buffer).unwrap();
         let tensors: SafeTensors = SafeTensors::deserialize(&buffer).unwrap();
 
-        GPT::<f32>::load_from_safe_tensors(&tensors);
+        let _gpt = GPT::<f32>::load_from_safe_tensors(&tensors);
+
+        /*         let tokenizer = Tokenizer::from_file("tokenizer/tokenizer.json").unwrap(); */
+        //
+        // let encode = tokenizer.encode("hello", false).unwrap();
+        //
+        // let ids: Vec<usize> = encode.get_ids().iter().map(|&x| x as usize).collect();
+        //
+        /* gpt.forward(&ids); */
     }
 }
