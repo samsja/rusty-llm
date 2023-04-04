@@ -19,14 +19,6 @@ where
     }
 
     pub fn new(weight: Array<T, Ix2>, bias: Array<T, Ix1>) -> Linear<T> {
-        if weight.shape()[0] != bias.shape()[0] {
-            panic!(
-                "Linear layer init: weight of shape {:?} is not compatible with bias of shape {:?}",
-                weight.shape(),
-                bias.shape()
-            );
-        }
-
         Linear { weight, bias }
     }
 

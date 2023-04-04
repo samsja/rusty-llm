@@ -1,7 +1,8 @@
-use crate::convert::from_safe_tensorview;
+use crate::convert::{from_safe_tensorview, from_safe_tensorview_1d};
 use crate::float::MyFloat;
 use crate::nn::block::Block;
-use crate::nn::linear::LinearNoBias;
+use crate::nn::head::CausalHead;
+use crate::nn::linear::{Linear, LinearNoBias};
 use ndarray::{Array, Axis, Ix2};
 use safetensors::SafeTensors;
 
@@ -47,12 +48,52 @@ where
         self.next_word_layer.forward(&output)
     }
 
+    pub fn load_linear(tensors: &SafeTensors, weight_name: &str, bias_name: &str) -> Linear<T> {
+        let weight = from_safe_tensorview::<T>(tensors.tensor(weight_name).unwrap());
+
+        let bias = from_safe_tensorview_1d::<T>(tensors.tensor(bias_name).unwrap());
+
+        Linear::<T>::new(weight, bias)
+    }
+
+    pub fn load_block(tensors: &SafeTensors, index: usize) -> Block<T> {
+        let qkv = GPT::<T>::load_linear(
+            tensors,
+            &format!("h.{}.attn.c_attn.weight", index),
+            &format!("h.{}.attn.c_attn.bias", index),
+        );
+
+        let proj_head = GPT::<T>::load_linear(
+            tensors,
+            &format!("h.{}.attn.c_proj.weight", index),
+            &format!("h.{}.attn.c_proj.bias", index),
+        );
+
+        let head = CausalHead::<T>::new(qkv, proj_head);
+
+        let fc = GPT::<T>::load_linear(
+            tensors,
+            &format!("h.{}.mlp.c_fc.weight", index),
+            &format!("h.{}.mlp.c_fc.bias", index),
+        );
+
+        let proj = GPT::<T>::load_linear(
+            tensors,
+            &format!("h.{}.mlp.c_proj.weight", index),
+            &format!("h.{}.mlp.c_proj.bias", index),
+        );
+
+        Block::<T>::new(head, fc, proj)
+    }
+
     pub fn load_from_safe_tensors(tensors: &SafeTensors) {
         let w_token_embed =
             from_safe_tensorview::<T>(tensors.tensor(&format!("wte.weight")).unwrap());
 
         let w_pos_embed =
-            from_safe_tensorview::<T>(tensors.tensor(&format!("h.0.attn.c_attn.weight")).unwrap());
+            from_safe_tensorview::<T>(tensors.tensor(&format!("wpe.weight")).unwrap());
+
+        let block_1 = GPT::<T>::load_block(tensors, 0);
     }
 }
 
