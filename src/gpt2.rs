@@ -193,5 +193,9 @@ mod tests {
         let mut ids: Vec<usize> = encode.get_ids().iter().map(|&x| x as usize).collect();
 
         ids.push(gpt.generate(&ids));
+
+        let txt = tokenizer
+            .decode(ids.iter().map(|&x| x as u32).collect(), false)
+            .unwrap();
     }
 }
