@@ -24,6 +24,13 @@ where
 
         y * &self.weight + &self.bias
     }
+
+    pub fn new_zeros(embed_dim: usize) -> LayerNorm<T> {
+        let weight = Array::<T, _>::zeros(embed_dim);
+        let bias = Array::<T, _>::zeros(embed_dim);
+
+        LayerNorm::<T>::new(weight, bias)
+    }
 }
 
 #[cfg(test)]

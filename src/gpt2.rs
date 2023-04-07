@@ -2,6 +2,7 @@ use crate::convert::{from_safe_tensorview, from_safe_tensorview_1d};
 use crate::float::MyFloat;
 use crate::nn::block::Block;
 use crate::nn::head::CausalHead;
+use crate::nn::layer_norm::LayerNorm;
 use crate::nn::linear::{Linear, LinearNoBias};
 use ndarray::{Array, Axis, Ix2};
 use safetensors::SafeTensors;
@@ -56,6 +57,18 @@ where
         Linear::<T>::new(weight, bias)
     }
 
+    pub fn load_layer_norm(
+        tensors: &SafeTensors,
+        weight_name: &str,
+        bias_name: &str,
+    ) -> LayerNorm<T> {
+        let weight = from_safe_tensorview_1d::<T>(tensors.tensor(weight_name).unwrap());
+
+        let bias = from_safe_tensorview_1d::<T>(tensors.tensor(bias_name).unwrap());
+
+        LayerNorm::<T>::new(weight, bias)
+    }
+
     pub fn load_block(tensors: &SafeTensors, index: usize) -> Block<T> {
         let qkv = GPT::<T>::load_linear(
             tensors,
@@ -83,7 +96,19 @@ where
             &format!("h.{}.mlp.c_proj.bias", index),
         );
 
-        Block::<T>::new(head, fc, proj)
+        let ln_1 = GPT::<T>::load_layer_norm(
+            tensors,
+            &format!("h.{}.ln_1.weight", index),
+            &format!("h.{}.ln_1.bias", index),
+        );
+
+        let ln_2 = GPT::<T>::load_layer_norm(
+            tensors,
+            &format!("h.{}.ln_2.weight", index),
+            &format!("h.{}.ln_2.bias", index),
+        );
+
+        Block::<T>::new(ln_1, head, ln_2, fc, proj)
     }
 
     pub fn load_from_safe_tensors(tensors: &SafeTensors) -> GPT<T> {
