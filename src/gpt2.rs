@@ -194,7 +194,7 @@ mod tests {
 
         ids.push(gpt.generate(&ids));
 
-        let txt = tokenizer
+        tokenizer
             .decode(ids.iter().map(|&x| x as u32).collect(), false)
             .unwrap();
     }

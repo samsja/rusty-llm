@@ -19,18 +19,31 @@ pub fn tril<'a, T: MyFloat>(x: &'a mut Array<T, Ix2>) -> &'a Array<T, Ix2> {
 }
 
 pub fn softmax<T: MyFloat>(x: &ArrayView<T, Ix1>) -> Array<T, Ix1> {
-    let exp_x = x.mapv(|x| x.exp());
+    let max_ = max_val(x);
+
+    let exp_x = x.mapv(|x| (x - max_).exp());
 
     let sum = exp_x.sum();
     exp_x / sum
 }
 
-pub fn argmax<T: MyFloat>(x: &ArrayView<T, Ix1>) -> usize {
-    x.iter()
+pub fn max<T: MyFloat>(x: &ArrayView<T, Ix1>) -> (usize, T) {
+    let (index, max_val) = x
+        .iter()
         .enumerate()
         .max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap())
-        .map(|(index, _)| index)
-        .unwrap()
+        .unwrap();
+    (index, *max_val)
+}
+
+pub fn argmax<T: MyFloat>(x: &ArrayView<T, Ix1>) -> usize {
+    let (index, _) = max(x);
+    index
+}
+
+pub fn max_val<T: MyFloat>(x: &ArrayView<T, Ix1>) -> T {
+    let (_, val) = max(x);
+    val
 }
 
 #[cfg(test)]
