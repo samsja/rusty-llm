@@ -1,5 +1,5 @@
 use crate::float::MyFloat;
-use ndarray::{Array, Ix2};
+use ndarray::{Array, ArrayView, Ix1, Ix2};
 
 pub fn fill_tril<'a, T: MyFloat>(x: &'a mut Array<T, Ix2>, val: T) -> &'a mut Array<T, Ix2> {
     // similar to numpy or torch tril
@@ -18,6 +18,21 @@ pub fn tril<'a, T: MyFloat>(x: &'a mut Array<T, Ix2>) -> &'a Array<T, Ix2> {
     fill_tril(x, T::from(0.0).unwrap())
 }
 
+pub fn softmax<T: MyFloat>(x: &ArrayView<T, Ix1>) -> Array<T, Ix1> {
+    let exp_x = x.mapv(|x| x.exp());
+
+    let sum = exp_x.sum();
+    exp_x / sum
+}
+
+pub fn argmax<T: MyFloat>(x: &ArrayView<T, Ix1>) -> usize {
+    x.iter()
+        .enumerate()
+        .max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap())
+        .map(|(index, _)| index)
+        .unwrap()
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -32,5 +47,12 @@ mod tests {
             tril_mat,
             Array::<f32, _>::from(vec![[1.0, 0.0, 0.0], [1.0, 1.0, 0.0], [1.0, 1.0, 1.0]])
         );
+    }
+
+    #[test]
+    fn test_argmax() {
+        let index = Array::<f32, _>::from(vec![1.0, 2.0, 3.0, 12.0, 1.0]);
+        let max_index = argmax(&index.view());
+        assert_eq!(max_index, 3);
     }
 }

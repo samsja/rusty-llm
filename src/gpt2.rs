@@ -4,7 +4,8 @@ use crate::nn::block::Block;
 use crate::nn::head::CausalHead;
 use crate::nn::layer_norm::LayerNorm;
 use crate::nn::linear::{Linear, LinearNoBias};
-use ndarray::{Array, Axis, Ix2};
+use crate::nn::utils::{argmax, softmax};
+use ndarray::{s, Array, Axis, Ix2};
 use safetensors::SafeTensors;
 
 pub struct GPT<T>
@@ -42,12 +43,18 @@ where
         let embed = pos_embedding + token_embeddng; // TODO : optimization do addition in place
 
         let mut output = embed;
-        println!("shape: {:?}", output.shape());
         for block in self.blocks.iter() {
             output = block.forward(&output);
         }
 
         self.next_word_layer.forward(&output)
+    }
+
+    pub fn generate(&self, indices: &Vec<usize>) -> usize {
+        let embed = self.forward(indices);
+        let logits = embed.slice(s![-1, ..]); // only keep the last work embedding
+        let probs = softmax(&logits);
+        argmax(&probs.view())
     }
 
     pub fn load_linear(tensors: &SafeTensors, weight_name: &str, bias_name: &str) -> Linear<T> {
@@ -162,8 +169,9 @@ mod tests {
 
         let ids: Vec<usize> = encode.get_ids().iter().map(|&x| x as usize).collect();
 
-        gpt.forward(&ids);
+        gpt.generate(&ids);
     }
+
     use std::fs::File;
     use std::io::prelude::*;
 
@@ -180,10 +188,10 @@ mod tests {
 
         let tokenizer = Tokenizer::from_file("tokenizer/tokenizer.json").unwrap();
 
-        let encode = tokenizer.encode("hello", false).unwrap();
+        let encode = tokenizer.encode("hello world", false).unwrap();
 
-        let ids: Vec<usize> = encode.get_ids().iter().map(|&x| x as usize).collect();
+        let mut ids: Vec<usize> = encode.get_ids().iter().map(|&x| x as usize).collect();
 
-        gpt.forward(&ids);
+        ids.push(gpt.generate(&ids));
     }
 }
