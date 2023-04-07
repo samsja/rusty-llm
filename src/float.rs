@@ -1,6 +1,6 @@
 use half::{bf16, f16};
 use ndarray::ScalarOperand;
-use num_traits::Float;
+use num_traits::{Float, FromPrimitive};
 
 pub trait FromFourBytes {
     fn from_f32_bytes(bytes: [u8; 4]) -> Self;
@@ -24,7 +24,7 @@ impl FromFourBytes for bf16 {
     }
 }
 
-pub trait MyFloat: 'static + Float + ScalarOperand + FromFourBytes {}
+pub trait MyFloat: 'static + Float + ScalarOperand + FromFourBytes + FromPrimitive {}
 
 impl MyFloat for f32 {}
 impl MyFloat for f16 {}
