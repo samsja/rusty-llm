@@ -112,13 +112,13 @@ where
         Block::<T>::new(ln_1, head, ln_2, fc, proj)
     }
 
-    pub fn load_from_safe_tensors(tensors: &SafeTensors) -> GPT<T> {
+    pub fn load_from_safe_tensors(tensors: &SafeTensors, num_block: usize) -> GPT<T> {
         let w_token_embed = from_safe_tensorview::<T>(tensors.tensor("wte.weight").unwrap());
 
         let w_pos_embed = from_safe_tensorview::<T>(tensors.tensor("wpe.weight").unwrap());
 
         // use 11
-        let blocks = (0..2)
+        let blocks = (0..num_block)
             .map(|i| GPT::<T>::load_block(tensors, i))
             .collect::<Vec<Block<T>>>();
 
@@ -176,7 +176,7 @@ mod tests {
         f.read_to_end(&mut buffer).unwrap();
         let tensors: SafeTensors = SafeTensors::deserialize(&buffer).unwrap();
 
-        let gpt = GPT::<f32>::load_from_safe_tensors(&tensors);
+        let gpt = GPT::<f32>::load_from_safe_tensors(&tensors, 2);
 
         let tokenizer = Tokenizer::from_file("tokenizer/tokenizer.json").unwrap();
 
