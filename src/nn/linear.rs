@@ -14,7 +14,7 @@ where
     T: MyFloat,
 {
     pub fn forward(&self, input: &Array<T, Ix2>) -> Array<T, Ix2> {
-        let output = input.dot(&self.weight.t());
+        let output = input.dot(&self.weight);
         output + self.bias.clone() // could be optimize to do inplace
     }
 
@@ -23,7 +23,7 @@ where
     }
 
     pub fn new_zeros(dim_in: usize, dim_out: usize) -> Linear<T> {
-        let weight = Array::<T, _>::zeros((dim_out, dim_in));
+        let weight = Array::<T, _>::zeros((dim_in, dim_out));
         let bias = Array::<T, _>::zeros(dim_out);
 
         Linear::<T>::new(weight, bias)
@@ -42,7 +42,7 @@ where
     T: MyFloat,
 {
     pub fn forward(&self, input: &Array<T, Ix2>) -> Array<T, Ix2> {
-        input.dot(&self.weight.t())
+        input.dot(&self.weight.t()) // contrary to Linear we do a transpose. This is because of gpt2 weight, might change in the future
     }
 
     pub fn new(weight: Array<T, Ix2>) -> LinearNoBias<T> {
