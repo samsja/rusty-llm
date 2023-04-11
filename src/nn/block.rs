@@ -6,7 +6,7 @@ use ndarray::{Array, Ix2};
 use std::f32::consts::PI;
 
 pub fn new_gelu_inplace<'a, T: MyFloat>(x: &'a mut Array<T, Ix2>) {
-    x.mapv_inplace(|v| {
+    x.mapv(|v| {
         T::from(0.5).unwrap()
             * v
             * (T::from(1.0).unwrap()
@@ -33,13 +33,14 @@ where
 {
     pub fn forward(&self, input: &Array<T, Ix2>) -> Array<T, Ix2> {
         let output = self.ln_1.forward(input);
-        let output = self.head.attention(&output);
+        let output = output.clone() + self.head.attention(&output); //todo remove clone
+        let output_skip = output.clone();
         let output = self.ln_2.forward(&output);
         let output = self.fc.forward(&output);
         let mut output = self.proj.forward(&output);
         new_gelu_inplace(&mut output);
 
-        output
+        output_skip + output
     }
 
     pub fn new_zeros(embed_dim: usize) -> Block<T> {
