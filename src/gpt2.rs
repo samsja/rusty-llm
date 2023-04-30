@@ -37,13 +37,16 @@ where
     }
 
     pub fn forward(&self, indices: &Vec<usize>) -> Array<T, Ix2> {
-        let token_embeddng = self.w_token_embed.select(Axis(0), indices);
+        let token_embedding = self.w_token_embed.select(Axis(0), indices);
         let range: Vec<usize> = (0..indices.len()).map(|i| i).collect();
         let pos_embedding = self.w_pos_embed.select(Axis(0), &range);
-        let embed = pos_embedding + token_embeddng; // TODO : optimization do addition in place
+        let embed = pos_embedding + token_embedding; // TODO : optimization do addition in place
 
         let mut output = embed;
+        let mut i = 0;
         for block in self.blocks.iter() {
+            i += 1;
+            println!("=========== block{} ================", i);
             output = block.forward(&output);
         }
 

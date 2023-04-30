@@ -26,7 +26,7 @@ fn main() {
 
     println!("{}", init_text);
 
-    for _ in 0..10 {
+    for _ in 0..1 {
         let new_word_id = gpt.generate(&ids);
 
         ids.push(new_word_id);

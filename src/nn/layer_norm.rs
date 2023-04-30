@@ -19,9 +19,8 @@ where
 
     pub fn forward(&self, x: &Array<T, Ix2>) -> Array<T, Ix2> {
         let eps = T::from(1e-5).unwrap();
-
-        let y = (x - x.mean().unwrap()) / (x.var(T::from(1).unwrap()) + eps).sqrt();
-
+        let bottom = (x.var(T::from(0).unwrap()) + eps).sqrt();
+        let y = (x - x.mean().unwrap()) / bottom;
         y * &self.weight + &self.bias
     }
 
@@ -51,5 +50,21 @@ mod tests {
         let ln = LayerNorm::<f32>::new(weight, bias);
 
         ln.forward(&embed);
+    }
+
+    #[test]
+    fn test_exact_forward() {
+        let embed = array!([3.0, 4.0, 5.0]);
+
+        let weight = array!(1.0, 2.0, 3.0);
+        let bias = array!(1.0, 3.0, 4.0);
+
+        let ln = LayerNorm::<f32>::new(weight, bias);
+
+        let output = ln.forward(&embed);
+
+        let expected = array!([-0.22473562, 3.0000000, 7.6742067]);
+
+        assert_eq!(output, expected);
     }
 }

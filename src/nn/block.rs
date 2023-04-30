@@ -6,7 +6,7 @@ use ndarray::{Array, Ix2};
 use std::f32::consts::PI;
 
 pub fn new_gelu_inplace<'a, T: MyFloat>(x: &'a mut Array<T, Ix2>) {
-    x.mapv(|v| {
+    x.mapv_inplace(|v| {
         T::from(0.5).unwrap()
             * v
             * (T::from(1.0).unwrap()
@@ -31,16 +31,21 @@ impl<T> Block<T>
 where
     T: MyFloat,
 {
-    pub fn forward(&self, input: &Array<T, Ix2>) -> Array<T, Ix2> {
-        let output = self.ln_1.forward(input);
-        let output = output.clone() + self.head.attention(&output); //todo remove clone
-        let output_skip = output.clone();
-        let output = self.ln_2.forward(&output);
-        let output = self.fc.forward(&output);
-        let mut output = self.proj.forward(&output);
-        new_gelu_inplace(&mut output);
-
-        output_skip + output
+    pub fn forward(&self, x: &Array<T, Ix2>) -> Array<T, Ix2> {
+        println!("x = {}", x.mean().unwrap());
+        let y = self.ln_1.forward(x);
+        println!("ln_1 = {}", y.mean().unwrap());
+        let y = self.head.attention(&y);
+        println!("attn = {}", y.mean().unwrap());
+        let x = x.clone() + y; //todo remove clone
+        let x_skip = x.clone();
+        let x = self.ln_2.forward(&x);
+        let mut x = self.fc.forward(&x);
+        new_gelu_inplace(&mut x);
+        let x = self.proj.forward(&x);
+        let x = x_skip + x;
+        println!("mlp {}", x.mean().unwrap());
+        x
     }
 
     pub fn new_zeros(embed_dim: usize) -> Block<T> {
