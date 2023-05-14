@@ -1,5 +1,5 @@
 use crate::float::MyFloat;
-use ndarray::{Array, ArrayView, Ix1, Ix2};
+use ndarray::{Array, ArrayView, Ix1, Ix2, Ix3};
 
 pub fn fill_tril<'a, T: MyFloat>(x: &'a mut Array<T, Ix2>, val: T) -> &'a mut Array<T, Ix2> {
     // similar to numpy or torch tril
@@ -7,6 +7,21 @@ pub fn fill_tril<'a, T: MyFloat>(x: &'a mut Array<T, Ix2>, val: T) -> &'a mut Ar
         for j in 0..x.shape()[1] {
             if j > i {
                 x[[i, j]] = val;
+            }
+        }
+    }
+
+    x
+}
+
+pub fn fill_tril_3d<'a, T: MyFloat>(x: &'a mut Array<T, Ix3>, val: T) -> &'a mut Array<T, Ix3> {
+    // similar to numpy or torch tril
+    for k in 0..x.shape()[0] {
+        for i in 0..x.shape()[1] {
+            for j in 0..x.shape()[2] {
+                if j > i {
+                    x[[k, i, j]] = val;
+                }
             }
         }
     }
@@ -59,6 +74,20 @@ mod tests {
         assert_eq!(
             tril_mat,
             Array::<f32, _>::from(vec![[1.0, 0.0, 0.0], [1.0, 1.0, 0.0], [1.0, 1.0, 1.0]])
+        );
+    }
+
+    #[test]
+    fn test_trill_3d() {
+        let mut mat1 = Array::<f32, Ix3>::ones((2, 3, 3).f());
+        fill_tril_3d(&mut mat1, 0.0);
+
+        assert_eq!(
+            mat1,
+            Array::<f32, Ix3>::from(vec![
+                [[1.0, 0.0, 0.0], [1.0, 1.0, 0.0], [1.0, 1.0, 1.0]],
+                [[1.0, 0.0, 0.0], [1.0, 1.0, 0.0], [1.0, 1.0, 1.0]]
+            ])
         );
     }
 
