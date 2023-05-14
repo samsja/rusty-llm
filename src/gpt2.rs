@@ -57,7 +57,7 @@ where
         let embed = self.forward(indices);
         let logits = embed.slice(s![-1, ..]); // only keep the last work embedding
         let probs = softmax(&logits);
-        argmax(&probs.view())
+        argmax(&probs.view().into_dyn())
     }
 
     pub fn load_linear(tensors: &SafeTensors, weight_name: &str, bias_name: &str) -> Linear<T> {
