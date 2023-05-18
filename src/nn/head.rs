@@ -2,7 +2,7 @@ use crate::float::MyFloat;
 use crate::nn::dot::dot_3d_3d;
 use crate::nn::linear::Linear;
 use crate::nn::utils::{fill_tril_3d, softmax_inplace_3d};
-use ndarray::{Array, Axis, Ix2, ShapeBuilder, Slice};
+use ndarray::{Array, ArrayView, Axis, Ix2, Ix3, ShapeBuilder, Slice};
 
 pub struct CausalHead<T>
 where
@@ -27,8 +27,22 @@ where
         CausalHead { qkv, proj }
     }
 
-    pub fn attention(&self, input: &Array<T, Ix2>) -> Array<T, Ix2> {
+    fn reshape_m<'a>(&self, m: &ArrayView<T, Ix2>) -> Array<T, Ix3> {
         let num_head = 2; // make parameter
+        let embed_dim = m.shape()[1];
+        let seq_len = m.shape()[0];
+
+        let mut m = m
+            .into_owned() // todo optimize remove into_owned
+            .into_shape((seq_len, num_head, embed_dim / num_head))
+            .unwrap();
+
+        m.swap_axes(0, 1);
+
+        m
+    }
+
+    pub fn attention(&self, input: &Array<T, Ix2>) -> Array<T, Ix2> {
         let embed_dim = input.shape()[1];
 
         println!("input = {}", input.mean().unwrap());
@@ -41,48 +55,43 @@ where
 
         let seq_len = q.shape()[0];
 
-        let mut q = q
-            .into_owned() // todo optimize remove into_owned
-            .into_shape((num_head, seq_len, embed_dim / num_head))
-            .unwrap();
+        let q = self.reshape_m(&q);
+        let mut k = self.reshape_m(&k);
 
-        q.swap_axes(0, 1);
-
-        let mut k = k
-            .into_owned()
-            .into_shape((num_head, seq_len, embed_dim / num_head))
-            .unwrap();
-
-        k.swap_axes(0, 1);
         k.swap_axes(2, 1);
 
         println!("q = {}", q.mean().unwrap());
+        println!("q shape= {:?}", q.shape());
+
         println!("k = {}", k.mean().unwrap());
+        println!("k shape= {:?}", k.shape());
 
         let qk = dot_3d_3d(&q.view(), &k.view());
         println!("qk = {}", qk.mean().unwrap());
 
-        let mut scores = qk / T::from(num_head).unwrap().sqrt(); // (seq,seq) = (seq, embed) @ (embed, seq)
+        let norm = 1.0 / (k.shape()[1] as f32).sqrt();
+        println!("norm = {}", norm);
+
+        let mut scores = qk * T::from(norm).unwrap();
+
         println!("scores = {}", scores.mean().unwrap());
         let mut mask_scores = fill_tril_3d(&mut scores, T::from(-1e9).unwrap());
         softmax_inplace_3d(&mut mask_scores);
 
-        println!("scores = {}", mask_scores.mean().unwrap());
+        println!("mask scores = {}", mask_scores.mean().unwrap());
 
-        let mut v = v
-            .into_owned() // todo optimize remove into_owned
-            .into_shape((num_head, seq_len, embed_dim / num_head))
-            .unwrap();
-
-        v.swap_axes(0, 1);
+        let v = self.reshape_m(&v);
 
         println!("v = {}", v.mean().unwrap());
 
         let output = dot_3d_3d(&mask_scores.view(), &v.view());
 
-        println!("output = {}", output.mean().unwrap());
+        println!("mv = {}", output.mean().unwrap());
 
         let output = output.into_shape((seq_len, embed_dim)).unwrap();
+
+        println!("c_proj_w = {}", self.proj.weight.mean().unwrap());
+        println!("c_proj_b = {}", self.proj.bias.mean().unwrap());
 
         self.proj.forward(&output) // (embed, seq) = (embed, embed) @ (embed, seq )
     }

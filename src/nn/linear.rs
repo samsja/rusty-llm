@@ -5,8 +5,8 @@ pub struct Linear<T>
 where
     T: MyFloat,
 {
-    weight: Array<T, Ix2>,
-    bias: Array<T, Ix1>,
+    pub weight: Array<T, Ix2>, //todo remove pub
+    pub bias: Array<T, Ix1>,   //todo remove pub
 }
 
 impl<T> Linear<T>
