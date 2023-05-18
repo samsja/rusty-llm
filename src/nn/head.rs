@@ -2,7 +2,7 @@ use crate::float::MyFloat;
 use crate::nn::dot::dot_3d_3d;
 use crate::nn::linear::Linear;
 use crate::nn::utils::{fill_tril_3d, softmax_inplace_3d};
-use ndarray::{Array, ArrayView, Axis, Ix2, Ix3, ShapeBuilder, Slice};
+use ndarray::{Array, ArrayView, Axis, Ix2, Ix3, Slice};
 
 pub struct CausalHead<T>
 where
@@ -45,9 +45,7 @@ where
     pub fn attention(&self, input: &Array<T, Ix2>) -> Array<T, Ix2> {
         let embed_dim = input.shape()[1];
 
-        println!("input = {}", input.mean().unwrap());
         let qkv = self.qkv.forward(&input); // (seq, 3* embed) = (seq, embed) @ (embed, 3* embed)
-        println!("qkv = {}", qkv.mean().unwrap());
 
         let q = qkv.slice_axis(Axis(1), Slice::from(..embed_dim));
         let k = qkv.slice_axis(Axis(1), Slice::from(embed_dim..2 * embed_dim));
@@ -60,38 +58,26 @@ where
 
         k.swap_axes(2, 1);
 
-        println!("q = {}", q.mean().unwrap());
-        println!("q shape= {:?}", q.shape());
-
-        println!("k = {}", k.mean().unwrap());
-        println!("k shape= {:?}", k.shape());
-
         let qk = dot_3d_3d(&q.view(), &k.view());
-        println!("qk = {}", qk.mean().unwrap());
 
         let norm = 1.0 / (k.shape()[1] as f32).sqrt();
-        println!("norm = {}", norm);
 
         let mut scores = qk * T::from(norm).unwrap();
 
-        println!("scores = {}", scores.mean().unwrap());
         let mut mask_scores = fill_tril_3d(&mut scores, T::from(-1e9).unwrap());
         softmax_inplace_3d(&mut mask_scores);
 
-        println!("mask scores = {}", mask_scores.mean().unwrap());
-
         let v = self.reshape_m(&v);
 
-        println!("v = {}", v.mean().unwrap());
+        let mut output = dot_3d_3d(&mask_scores.view(), &v.view());
 
-        let output = dot_3d_3d(&mask_scores.view(), &v.view());
+        output.swap_axes(0, 1);
 
-        println!("mv = {}", output.mean().unwrap());
-
-        let output = output.into_shape((seq_len, embed_dim)).unwrap();
-
-        println!("c_proj_w = {}", self.proj.weight.mean().unwrap());
-        println!("c_proj_b = {}", self.proj.bias.mean().unwrap());
+        let output = output
+            .as_standard_layout()
+            .to_owned()
+            .into_shape((seq_len, embed_dim))
+            .unwrap();
 
         self.proj.forward(&output) // (embed, seq) = (embed, embed) @ (embed, seq )
     }
@@ -166,12 +152,12 @@ mod tests {
 
         let bias = array!(0.0877704, -0.2477426, -0.3182796, 0.0820071, -0.1132862, 0.0899569);
 
-        let proj = Linear::<f32>::new(weight, bias);
+        let linear = Linear::<f32>::new(weight, bias);
 
-        let head = CausalHead::<f32>::new(qkv, proj);
+        let head = CausalHead::<f32>::new(qkv, linear);
 
         let output = head.attention(&embed);
 
-        assert_eq!(output.mean().unwrap(), -0.059292022138834);
+        assert_eq!(output.mean().unwrap(), -0.05929202);
     }
 }
