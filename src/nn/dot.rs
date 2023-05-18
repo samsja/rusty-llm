@@ -1,12 +1,12 @@
 use crate::float::MyFloat;
 use ndarray::{stack, Array, ArrayView, Axis, Ix2, Ix3};
 
-pub fn dot_3d<'a, T: MyFloat>(
+pub fn dot_3d_2d<'a, T: MyFloat>(
     mat1: &'a Array<T, Ix3>,
     mat2: &'a ArrayView<T, Ix2>,
 ) -> Array<T, Ix3> {
     // mat1:(B, X, Y)
-    // mat2: (B, Y, Z)
+    // mat2: (Y, Z)
     // output: (B, X, Z)
 
     let shape = mat1.shape();
@@ -27,6 +27,9 @@ pub fn dot_3d_3d<'a, T: MyFloat>(
     mat1: &'a ArrayView<T, Ix3>,
     mat2: &'a ArrayView<T, Ix3>,
 ) -> Array<T, Ix3> {
+    // mat1:(B, X, Y)
+    // mat2: (B, Y, Z)
+    // output: (B, X, Z)
     let n = mat1.shape()[0];
     if n != mat2.shape()[0] {
         panic!("mat1 and mat2 should have the same size for the first axis, they don't mat1: {:?} mat2{:?}", mat1.shape(), mat2.shape())
@@ -37,7 +40,6 @@ pub fn dot_3d_3d<'a, T: MyFloat>(
     for i in 0..n {
         let x = mat1.index_axis(Axis(0), i);
         let y = mat2.index_axis(Axis(0), i);
-
         inner_dot_2d.push(x.dot(&y));
     }
 
@@ -46,7 +48,7 @@ pub fn dot_3d_3d<'a, T: MyFloat>(
         .map(|x| x.view())
         .collect::<Vec<ArrayView<T, Ix2>>>();
 
-    stack(Axis(1), &inner_dot_2d_view).unwrap()
+    stack(Axis(0), &inner_dot_2d_view).unwrap()
 }
 
 #[cfg(test)]
@@ -58,7 +60,7 @@ mod tests {
     fn test_dot_3d() {
         let mat1 = Array::<f32, _>::zeros((3, 10, 12).f());
         let mat2 = Array::<f32, _>::zeros((12, 15).f());
-        let mat3 = dot_3d(&mat1, &mat2.view());
+        let mat3 = dot_3d_2d(&mat1, &mat2.view());
 
         assert_eq!(mat3.shape(), &[3, 10, 15]);
     }
@@ -88,6 +90,15 @@ mod tests {
             [[11440., 12010.], [13240., 13900.]]
         ];
 
-        assert_eq!(output.mean().unwrap(), expected_output.mean().unwrap())
+        assert_eq!(output, expected_output);
+    }
+
+    #[test]
+    fn test_dot_3d_3d_shape() {
+        let mat1 = Array::<f32, _>::zeros((3, 10, 12).f());
+        let mat2 = Array::<f32, _>::zeros((3, 12, 15).f());
+        let mat3 = dot_3d_3d(&mat1.view(), &mat2.view());
+
+        assert_eq!(mat3.shape(), &[3, 10, 15]);
     }
 }

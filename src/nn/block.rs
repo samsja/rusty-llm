@@ -32,11 +32,11 @@ where
     T: MyFloat,
 {
     pub fn forward(&self, x: &Array<T, Ix2>) -> Array<T, Ix2> {
-        println!("x = {}", x.mean().unwrap());
+        //println!("x = {}", x.mean().unwrap());
         let y = self.ln_1.forward(x);
-        println!("ln_1 = {}", y.mean().unwrap());
+        //println!("ln_1 = {}", y.mean().unwrap());
         let y = self.head.attention(&y);
-        println!("attn = {}", y.mean().unwrap());
+        //println!("attn = {}", y.mean().unwrap());
         let x = x.clone() + y; //todo remove clone
         let x_skip = x.clone();
         let x = self.ln_2.forward(&x);
