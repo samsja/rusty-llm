@@ -14,7 +14,7 @@ fn main() {
     f.read_to_end(&mut buffer).unwrap();
     let tensors: SafeTensors = SafeTensors::deserialize(&buffer).unwrap();
 
-    let gpt = GPT::<f32>::load_from_safe_tensors(&tensors, 11);
+    let gpt = GPT::<f32>::load_from_safe_tensors(&tensors, 12);
 
     let tokenizer = Tokenizer::from_file("tokenizer/tokenizer.json").unwrap();
 

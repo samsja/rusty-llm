@@ -15,7 +15,8 @@ where
     w_token_embed: Array<T, Ix2>,
     w_pos_embed: Array<T, Ix2>,
     blocks: Vec<Block<T>>,
-    next_word_layer: LinearNoBias<T>, // TODO: should be without bias
+    ln_f: LayerNorm<T>,
+    next_word_layer: LinearNoBias<T>,
 }
 
 impl<T> GPT<T>
@@ -26,12 +27,14 @@ where
         w_token_embed: Array<T, Ix2>,
         w_pos_embed: Array<T, Ix2>,
         blocks: Vec<Block<T>>,
+        ln_f: LayerNorm<T>,
         next_word_layer: LinearNoBias<T>,
     ) -> GPT<T> {
         GPT::<T> {
             w_token_embed,
             w_pos_embed,
             blocks,
+            ln_f,
             next_word_layer,
         }
     }
@@ -43,14 +46,17 @@ where
         let embed = pos_embedding + token_embedding; // TODO : optimization do addition in place
 
         let mut output = embed;
-        let mut i = 0;
+        //let mut i = 0;
         for block in self.blocks.iter() {
-            i += 1;
-            println!("=========== block{} ================", i);
+            //i += 1;
+            //println!("=========== block{} ================", i);
             output = block.forward(&output);
         }
 
-        self.next_word_layer.forward(&output)
+        let output = self.ln_f.forward(&output);
+        let output = self.next_word_layer.forward(&output);
+        println!("logits {}", output.mean().unwrap());
+        output
     }
 
     pub fn generate(&self, indices: &Vec<usize>) -> usize {
@@ -127,15 +133,19 @@ where
 
         let w_pos_embed = from_safe_tensorview::<T>(tensors.tensor("wpe.weight").unwrap());
 
-        // use 11
         let blocks = (0..num_block)
             .map(|i| GPT::<T>::load_block(tensors, i))
             .collect::<Vec<Block<T>>>();
 
+        let ln_f_weigth = from_safe_tensorview_1d::<T>(tensors.tensor("ln_f.weight").unwrap());
+        let ln_f_bias = from_safe_tensorview_1d::<T>(tensors.tensor("ln_f.bias").unwrap());
+
+        let ln_f = LayerNorm::<T>::new(ln_f_weigth, ln_f_bias);
+
         let next_word_weight = from_safe_tensorview::<T>(tensors.tensor("wte.weight").unwrap());
         let next_word_layer = LinearNoBias::<T>::new(next_word_weight);
 
-        GPT::<T>::new(w_token_embed, w_pos_embed, blocks, next_word_layer)
+        GPT::<T>::new(w_token_embed, w_pos_embed, blocks, ln_f, next_word_layer)
     }
 }
 
@@ -164,7 +174,9 @@ mod tests {
 
         let next_word_layer = LinearNoBias::<f32>::new_zeros(embed_dim, vocab_size);
 
-        let gpt = GPT::<f32>::new(w_token_embed, w_pos_embed, blocks, next_word_layer);
+        let ln_f = LayerNorm::<f32>::new_zeros(embed_dim);
+
+        let gpt = GPT::<f32>::new(w_token_embed, w_pos_embed, blocks, ln_f, next_word_layer);
 
         let tokenizer = Tokenizer::from_file("tokenizer/tokenizer.json").unwrap();
 
