@@ -1,4 +1,5 @@
 use std::fs::File;
+use std::io;
 use std::io::prelude::*;
 
 use rusty_llm::gpt2::GPT;
@@ -24,17 +25,17 @@ fn main() {
 
     let mut ids: Vec<usize> = encode.get_ids().iter().map(|&x| x as usize).collect();
 
-    println!("{}", init_text);
+    print!("{}", init_text);
 
-    for _ in 0..1 {
+    for _ in 0..10 {
         let new_word_id = gpt.generate(&ids);
 
         ids.push(new_word_id);
 
-        let txt = tokenizer
-            .decode(ids.iter().map(|&x| x as u32).collect(), false)
-            .unwrap();
+        let id_to_decode: Vec<u32> = vec![new_word_id as u32];
 
-        println!("{}", txt);
+        let txt = tokenizer.decode(id_to_decode, false).unwrap();
+        print!("{}", txt);
+        io::stdout().flush().unwrap(); // flush to see output in real time
     }
 }

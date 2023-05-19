@@ -55,7 +55,6 @@ where
 
         let output = self.ln_f.forward(&output);
         let output = self.next_word_layer.forward(&output);
-        println!("logits {}", output.mean().unwrap());
         output
     }
 
