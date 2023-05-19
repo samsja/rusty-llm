@@ -7,7 +7,28 @@ use rusty_llm::gpt2::GPT;
 use safetensors::SafeTensors;
 use tokenizers::Tokenizer;
 
+use std::env;
+use std::process;
+
 fn main() {
+    // Get command line arguments
+    let args: Vec<String> = env::args().collect();
+
+    // Ensure an argument is provided
+    if args.len() != 2 {
+        eprintln!("You must provide exactly one argument.");
+        process::exit(1);
+    }
+
+    // Try to parse the argument as an integer
+    let number: i32 = match args[1].parse() {
+        Ok(v) => v,
+        Err(e) => {
+            eprintln!("Failed to parse argument as integer: {}", e);
+            process::exit(1);
+        }
+    };
+
     let mut f = File::open("models/model.safetensors").unwrap();
     let mut buffer = Vec::new();
 
@@ -19,15 +40,27 @@ fn main() {
 
     let tokenizer = Tokenizer::from_file("tokenizer/tokenizer.json").unwrap();
 
-    let init_text = "hello world";
+    println!("========== GPT 2 ================");
+
+    println!("Please enter your prompt: \n");
+
+    // Make sure the prompt immediately appears on the screen.
+    io::stdout().flush().unwrap();
+
+    let mut init_text = String::new();
+
+    io::stdin()
+        .read_line(&mut init_text)
+        .expect("Failed to read line");
+
+    // Remove the trailing newline.
+    let init_text = init_text.trim();
 
     let encode = tokenizer.encode(init_text, false).unwrap();
 
     let mut ids: Vec<usize> = encode.get_ids().iter().map(|&x| x as usize).collect();
 
-    print!("{}", init_text);
-
-    for _ in 0..10 {
+    for _ in 0..number {
         let new_word_id = gpt.generate(&ids);
 
         ids.push(new_word_id);
