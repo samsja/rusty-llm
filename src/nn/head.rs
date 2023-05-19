@@ -10,6 +10,7 @@ where
 {
     qkv: Linear<T>, // Q, K, V at the same time
     proj: Linear<T>,
+    num_head: usize,
 }
 
 impl<T> CausalHead<T>
@@ -21,20 +22,23 @@ where
 
         let proj = Linear::<T>::new_zeros(embed_dim, embed_dim);
 
-        CausalHead::new(qkv, proj)
+        CausalHead::new(qkv, proj, 2)
     }
-    pub fn new(qkv: Linear<T>, proj: Linear<T>) -> CausalHead<T> {
-        CausalHead { qkv, proj }
+    pub fn new(qkv: Linear<T>, proj: Linear<T>, num_head: usize) -> CausalHead<T> {
+        CausalHead {
+            qkv,
+            proj,
+            num_head,
+        }
     }
 
     fn reshape_m<'a>(&self, m: &ArrayView<T, Ix2>) -> Array<T, Ix3> {
-        let num_head = 2; // make parameter
         let embed_dim = m.shape()[1];
         let seq_len = m.shape()[0];
 
         let mut m = m
             .into_owned() // todo optimize remove into_owned
-            .into_shape((seq_len, num_head, embed_dim / num_head))
+            .into_shape((seq_len, self.num_head, embed_dim / self.num_head))
             .unwrap();
 
         m.swap_axes(0, 1);
@@ -154,7 +158,7 @@ mod tests {
 
         let linear = Linear::<f32>::new(weight, bias);
 
-        let head = CausalHead::<f32>::new(qkv, linear);
+        let head = CausalHead::<f32>::new(qkv, linear, 2);
 
         let output = head.attention(&embed);
 

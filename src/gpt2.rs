@@ -93,7 +93,7 @@ where
             &format!("h.{}.attn.c_proj.bias", index),
         );
 
-        let head = CausalHead::<T>::new(qkv, proj_head);
+        let head = CausalHead::<T>::new(qkv, proj_head, 12);
 
         let fc = GPT::<T>::load_linear(
             tensors,
