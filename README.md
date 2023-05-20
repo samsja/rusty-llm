@@ -12,7 +12,7 @@ cargo build --release
 
 Then you can run via
 ```bash
-cargo run 10 
+cargo run --release 10 
 ```
 
 the `10` is a parameter that control the number of tokens that will be produced.
