@@ -2,7 +2,7 @@ use crate::float::MyFloat;
 use crate::nn::dot::dot_3d_3d;
 use crate::nn::linear::Linear;
 use crate::nn::utils::{fill_tril_3d, softmax_inplace_3d};
-use ndarray::{Array, ArrayView, Axis, Ix2, Ix3, Slice};
+use ndarray::{Array, ArrayView, Axis, CowArray, Ix2, Ix3, Slice};
 
 pub struct CausalHead<T>
 where
@@ -32,17 +32,15 @@ where
         }
     }
 
-    fn reshape_m<'a>(&self, m: &ArrayView<T, Ix2>) -> Array<T, Ix3> {
+    fn reshape_m<'a>(&'a self, m: &'a ArrayView<T, Ix2>) -> CowArray<T, Ix3> {
         let embed_dim = m.shape()[1];
         let seq_len = m.shape()[0];
 
         let mut m = m
-            .into_owned() // todo optimize remove into_owned
-            .into_shape((seq_len, self.num_head, embed_dim / self.num_head))
+            .to_shape((seq_len, self.num_head, embed_dim / self.num_head))
             .unwrap();
 
         m.swap_axes(0, 1);
-
         m
     }
 
