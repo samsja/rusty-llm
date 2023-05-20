@@ -75,13 +75,11 @@ where
 
         output.swap_axes(0, 1);
 
-        let output = output
-            .as_standard_layout()
-            .to_owned()
-            .into_shape((seq_len, embed_dim))
-            .unwrap();
+        let output = output.as_standard_layout();
 
-        self.proj.forward(&output) // (embed, seq) = (embed, embed) @ (embed, seq )
+        let output = output.to_shape((seq_len, embed_dim)).unwrap();
+
+        self.proj.forward_cow(&output) // (embed, seq) = (embed, embed) @ (embed, seq )
     }
 }
 

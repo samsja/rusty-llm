@@ -1,5 +1,5 @@
 use crate::float::MyFloat;
-use ndarray::{Array, Ix1, Ix2};
+use ndarray::{Array, CowArray, Ix1, Ix2};
 
 pub struct Linear<T>
 where
@@ -14,6 +14,10 @@ where
     T: MyFloat,
 {
     pub fn forward(&self, input: &Array<T, Ix2>) -> Array<T, Ix2> {
+        self.forward_cow(&CowArray::from(input))
+    }
+
+    pub fn forward_cow(&self, input: &CowArray<T, Ix2>) -> Array<T, Ix2> {
         let output = input.dot(&self.weight);
         output + &self.bias // todo could be optimize to do inplace
     }
