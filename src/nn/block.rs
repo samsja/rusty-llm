@@ -37,8 +37,8 @@ where
         // println!("ln_1 = {}", y.mean().unwrap());
         let y = self.head.attention(&y);
         // println!("attn = {}", y.mean().unwrap());
-        let x = x.clone() + y; //todo remove clone
-        let x_skip = x.clone();
+        let x = x + y;
+        let x_skip = &x;
         let x = self.ln_2.forward(&x);
         let mut x = self.fc.forward(&x);
         new_gelu_inplace(&mut x);
