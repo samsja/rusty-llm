@@ -15,7 +15,7 @@ where
 {
     pub fn forward(&self, input: &Array<T, Ix2>) -> Array<T, Ix2> {
         let output = input.dot(&self.weight);
-        output + self.bias.clone() // could be optimize to do inplace
+        output + &self.bias // todo could be optimize to do inplace
     }
 
     pub fn new(weight: Array<T, Ix2>, bias: Array<T, Ix1>) -> Linear<T> {
