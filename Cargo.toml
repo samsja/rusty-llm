@@ -7,7 +7,8 @@ edition = "2021"
 
 [dependencies]
 half = { version = "2.2.1", features = ["num-traits"] }
-ndarray = { version = "0.15.6", git = "https://github.com/samsja/ndarray" , features = ["blas"]}
+ndarray = { version = "0.15.6", git = "https://github.com/samsja/ndarray" , features = ["blas", "rayon"]}
+rayon = { version = "1.0.3"}
 blas-src = { version = "0.9", features = ["openblas"] }
 openblas-src = { version = "0.10.8", features = ["cblas", "system"] }
 num-traits = "0.2.15"

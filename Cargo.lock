@@ -952,6 +952,7 @@ dependencies = [
  "num-integer",
  "num-traits",
  "rawpointer",
+ "rayon",
 ]
 
 [[package]]
@@ -1364,6 +1365,7 @@ dependencies = [
  "ndarray",
  "num-traits",
  "openblas-src",
+ "rayon",
  "safetensors",
  "tokenizers",
 ]
