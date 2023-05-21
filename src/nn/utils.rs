@@ -79,6 +79,16 @@ pub fn max_val<T: MyFloat>(x: &ArrayView<T, IxDyn>) -> T {
     val
 }
 
+#[macro_export]
+macro_rules! time_it {
+    ($context:literal, $s:stmt) => {
+        let timer = std::time::Instant::now();
+        $s
+        println!("{}: {:?}", $context, timer.elapsed());
+    };
+}
+// credits to https://notes.iveselov.info/programming/time_it-a-case-study-in-rust-macros
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -152,5 +162,14 @@ mod tests {
                 ]
             ])
         );
+    }
+
+    #[test]
+    fn test_time_it() {
+        time_it!("println", println!("hello, world!"));
+
+        let x = 1;
+        time_it!("let", let y = x + 2);
+        let _z = y;
     }
 }

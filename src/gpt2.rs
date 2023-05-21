@@ -46,9 +46,9 @@ where
         let embed = pos_embedding + token_embedding; // TODO : optimization do addition in place
 
         let mut output = embed;
-        //let mut i = 0;
+        // let mut i = 0;
         for block in self.blocks.iter() {
-            //i += 1;
+            // i += 1;
             //println!("=========== block{} ================", i);
             output = block.forward(&output);
         }

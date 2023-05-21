@@ -26,7 +26,7 @@ impl FromFourBytes for bf16 {
 }
 
 pub trait MyFloat:
-    'static + Float + ScalarOperand + FromFourBytes + FromPrimitive + Display
+    'static + Float + Send + Sync + ScalarOperand + FromFourBytes + FromPrimitive + Display
 {
 }
 

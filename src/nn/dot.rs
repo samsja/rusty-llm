@@ -51,10 +51,10 @@ pub fn dot_3d_3d<'a, T: MyFloat>(
     stack(Axis(0), &inner_dot_2d_view).unwrap()
 }
 
-pub fn dot_3d_3d_par<'a>(
-    mat1: &'a ArrayView<f32, Ix3>,
-    mat2: &'a ArrayView<f32, Ix3>,
-) -> Array<f32, Ix3> {
+pub fn dot_3d_3d_par<'a, T: MyFloat>(
+    mat1: &'a ArrayView<T, Ix3>,
+    mat2: &'a ArrayView<T, Ix3>,
+) -> Array<T, Ix3> {
     // mat1:(B, X, Y)
     // mat2: (B, Y, Z)
     // output: (B, X, Z)
@@ -68,7 +68,7 @@ pub fn dot_3d_3d_par<'a>(
 
     let n = a_subviews.len();
 
-    let mut inner_dot_2d: Vec<Array<f32, Ix2>> = Vec::with_capacity(n);
+    let mut inner_dot_2d: Vec<Array<T, Ix2>> = Vec::with_capacity(n);
 
     inner_dot_2d.par_extend(
         a_subviews
@@ -80,7 +80,7 @@ pub fn dot_3d_3d_par<'a>(
     let inner_dot_2d_view = inner_dot_2d
         .iter()
         .map(|x| x.view())
-        .collect::<Vec<ArrayView<f32, Ix2>>>();
+        .collect::<Vec<ArrayView<T, Ix2>>>();
 
     stack(Axis(0), &inner_dot_2d_view).unwrap()
 }
@@ -88,7 +88,6 @@ pub fn dot_3d_3d_par<'a>(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::time_it;
     use ndarray::prelude::*;
 
     #[test]

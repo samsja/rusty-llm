@@ -1,5 +1,5 @@
 use crate::float::MyFloat;
-use crate::nn::dot::dot_3d_3d;
+use crate::nn::dot::dot_3d_3d_par;
 use crate::nn::linear::Linear;
 use crate::nn::utils::{fill_tril_3d, softmax_inplace_3d};
 use ndarray::{Array, ArrayView, Axis, CowArray, Ix2, Ix3, Slice};
@@ -60,7 +60,7 @@ where
 
         k.swap_axes(2, 1);
 
-        let qk = dot_3d_3d(&q.view(), &k.view());
+        let qk = dot_3d_3d_par(&q.view(), &k.view());
 
         let norm = 1.0 / (k.shape()[1] as f32).sqrt();
 
@@ -71,7 +71,7 @@ where
 
         let v = self.reshape_m(&v);
 
-        let mut output = dot_3d_3d(&mask_scores.view(), &v.view());
+        let mut output = dot_3d_3d_par(&mask_scores.view(), &v.view());
 
         output.swap_axes(0, 1);
 

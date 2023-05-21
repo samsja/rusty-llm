@@ -2,11 +2,24 @@ use crate::float::MyFloat;
 use crate::nn::head::CausalHead;
 use crate::nn::layer_norm::LayerNorm;
 use crate::nn::linear::Linear;
+// use crate::time_it;
+
 use ndarray::{Array, Ix2};
 use std::f32::consts::PI;
 
 pub fn new_gelu_inplace<'a, T: MyFloat>(x: &'a mut Array<T, Ix2>) {
     x.mapv_inplace(|v| {
+        T::from(0.5).unwrap()
+            * v
+            * (T::from(1.0).unwrap()
+                + ((T::from(2.0 / PI).unwrap().sqrt()
+                    * (v + T::from(0.044715).unwrap() * v.powi(3)))
+                .tanh()))
+    });
+}
+
+pub fn new_gelu_par_inplace<'a, T: MyFloat>(x: &'a mut Array<T, Ix2>) {
+    x.par_mapv_inplace(|v| {
         T::from(0.5).unwrap()
             * v
             * (T::from(1.0).unwrap()
@@ -32,19 +45,29 @@ where
     T: MyFloat,
 {
     pub fn forward(&self, x: &Array<T, Ix2>) -> Array<T, Ix2> {
-        // println!("x = {}", x.mean().unwrap());
+        // time_it!("ln_1", let y = self.ln_1.forward(x));
         let y = self.ln_1.forward(x);
-        // println!("ln_1 = {}", y.mean().unwrap());
+
+        //time_it!("attn", let y = self.head.attention(&y));
         let y = self.head.attention(&y);
-        // println!("attn = {}", y.mean().unwrap());
         let x = x + y;
         let x_skip = &x;
+        //time_it!("ln_2", let x = self.ln_2.forward(&x));
         let x = self.ln_2.forward(&x);
+
+        // let mlp = |x| { let mut x = self.fc.forward(&x);
+        //     new_gelu_inplace(&mut x);
+        //     let x = self.proj.forward(&x);
+        //     x
+        // };
+        //
+        // time_it!("mlp", let x = mlp(x));
+
         let mut x = self.fc.forward(&x);
-        new_gelu_inplace(&mut x);
+        new_gelu_par_inplace(&mut x);
         let x = self.proj.forward(&x);
+
         let x = x_skip + x;
-        // println!("mlp {}", x.mean().unwrap());
         x
     }
 
